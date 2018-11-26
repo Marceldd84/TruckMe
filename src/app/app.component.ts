@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { DriversService } from './drivers.service';
+import { DriverPosition } from './Types/driverPosition';
+import { DriverPerson } from './Types/driver';
 
 
 @Component({
@@ -11,39 +14,35 @@ export class AppComponent {
   lat = 51.678418;
   lng = 7.809007;
 
-  markers: marker[] = [
-    {
-      lat: 25.694055,
-      lng: -80.321886,
-      label: 'A',
-      content: 'asdasd'
-    },
-    {
-      lat: 25.693233,
-      lng: -80.319740,
-      label: 'J',
-      content: 'Jordy el piti pua'
-    },
-    {
-      lat: 25.692856,
-      lng: -80.317766,
-      label: 'C',
-      content: 'xsdad'
-    }
-  ];
+  markers: DriverPosition[] = [];
+  constructor(private driverService: DriversService) {
+  }
 
-  ngOnInit() {
+  loadPosition() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         this.lat = position.coords.latitude;
         this.lng = position.coords.longitude;
-this.calculateDistance();
+        this.driverService.getExistingDriversPositions().subscribe((persons: DriverPerson[]) => {
+          for (let p of persons) {
+            this.markers.push(p.position);
+          }
+        });
 
+      }, (er) => {
+        console.log(er);
       });
     } else {
       alert('Geolocation is not supported by this browser.');
     }
   }
+
+  // tslint:disable-next-line:use-life-cycle-interface
+  ngOnInit() {
+    this.loadPosition();
+  }
+
+
   calculateDistance() {
     let p = 0.017453292519943295;    // Math.PI / 180
     let c = Math.cos;
@@ -55,9 +54,4 @@ this.calculateDistance();
   }
 }
 
-interface marker {
-  lat: number;
-  lng: number;
-  label?: string;
-  content?: string;
-}
+
